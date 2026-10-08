@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AP Multi-Hardware Benchmark Suite</title>
+  <title>AP Precision Benchmark Suite v2.1</title>
   <style>
     :root {
       --bg-color: #0b0c10;
@@ -11,7 +11,6 @@
       --accent-color: #66fcf1;
       --text-color: #c5c6c7;
       --highlight: #45a29e;
-      --danger: #ff4d4d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,14 +25,13 @@
     .view { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
     .active { display: flex !important; flex-direction: column; }
 
-    /* 메인 메뉴 UI */
+    /* 메인 메뉴 */
     #menu-view { align-items: center; justify-content: center; padding: 20px; }
     h1 { color: var(--accent-color); font-size: 2.2rem; margin-bottom: 6px; text-align: center; }
     .subtitle { font-size: 0.9rem; color: #aaa; margin-bottom: 25px; text-align: center; }
     
     .menu-grid {
       display: grid;
-      grid-spacing: 16px;
       grid-template-columns: repeat(2, 340px);
       gap: 16px;
     }
@@ -53,144 +51,116 @@
       transform: translateY(-2px);
       box-shadow: 0 0 12px var(--accent-color);
     }
-    .btn-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 6px; display: block; pointer-events: none; }
-    .btn-desc { font-size: 0.8rem; color: #bbb; line-height: 1.3; pointer-events: none; }
+    .btn-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 6px; display: block; }
+    .btn-desc { font-size: 0.8rem; color: #bbb; line-height: 1.3; }
     .menu-btn:hover .btn-desc { color: #111; }
 
-    /* HUD 대시보드 */
+    /* HUD */
     .hud {
       position: absolute;
       top: 15px; left: 15px;
       z-index: 100;
-      background: rgba(31, 40, 51, 0.93);
+      background: rgba(31, 40, 51, 0.95);
       border: 1px solid var(--highlight);
-      padding: 16px;
+      padding: 18px;
       border-radius: 8px;
       width: 360px;
       backdrop-filter: blur(4px);
     }
-    .hud h3 { color: var(--accent-color); margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-    .hud-info { font-size: 0.78rem; color: #aaa; margin-bottom: 12px; line-height: 1.35; }
-    .hud-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.88rem; align-items: center; }
+    .hud h3 { color: var(--accent-color); margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .hud-info { font-size: 0.8rem; color: #aaa; margin-bottom: 14px; line-height: 1.35; }
+    .hud-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; align-items: center; }
     .hud-val { color: var(--accent-color); font-weight: bold; }
-    .drop-alert { color: var(--danger) !important; animation: blink 0.4s infinite alternate; }
-    @keyframes blink { from { opacity: 1; } to { opacity: 0.3; } }
 
-    /* 타이머 및 프로그레스 바 */
-    .timer-container { margin-bottom: 10px; }
-    .progress-bar-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .progress-bar-fill { height: 100%; width: 100%; background: var(--accent-color); transition: width 0.1s linear; }
+    /* 진행률 바 */
+    .timer-container { margin-bottom: 12px; }
+    .progress-bar-bg { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .progress-bar-fill { height: 100%; width: 0%; background: var(--accent-color); transition: width 0.05s linear; }
 
-    /* 컨트롤 조절 바 */
-    .ctrl-group { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #444; }
-    .quick-btns { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
-    .q-btn {
-      background: #254e58; border: 1px solid var(--highlight); color: #fff;
-      padding: 3px 7px; font-size: 0.75rem; border-radius: 4px; cursor: pointer;
-    }
-    .q-btn:hover { background: var(--highlight); color: #000; }
-
-    input[type=range] { width: 100%; margin-top: 4px; }
-    
     .btn-back {
-      margin-top: 12px; width: 100%; background: #c94c4c;
-      color: white; border: none; padding: 9px; font-weight: bold;
+      margin-top: 14px; width: 100%; background: #c94c4c;
+      color: white; border: none; padding: 10px; font-weight: bold;
       border-radius: 5px; cursor: pointer;
     }
     .btn-back:hover { background: #b03a3a; }
 
-    /* 캔버스 영역 */
+    /* 캔버스 */
     .test-area { flex: 1; width: 100%; height: 100%; background: #050505; }
     canvas { width: 100%; height: 100%; display: block; }
 
-    /* 결과 스코어 모달 디자인 개선 */
+    /* 결과 모달 */
     #summary-modal {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: var(--card-bg); border: 2px solid var(--accent-color);
-      padding: 22px; border-radius: 12px; z-index: 200; width: 90%; max-width: 520px; display: none;
-      box-shadow: 0 0 25px rgba(102, 252, 241, 0.3);
+      padding: 24px; border-radius: 12px; z-index: 200; width: 90%; max-width: 540px; display: none;
+      box-shadow: 0 0 30px rgba(102, 252, 241, 0.35);
     }
     .score-card {
-      background: rgba(11, 12, 16, 0.75);
+      background: rgba(11, 12, 16, 0.8);
       border: 1px solid var(--highlight);
       border-radius: 8px;
-      padding: 12px 14px;
+      padding: 12px 16px;
       margin-bottom: 10px;
     }
-    .score-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
+    .score-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .score-card .title { font-weight: bold; color: #fff; font-size: 1rem; }
-    .score-card .val { font-weight: bold; color: var(--accent-color); font-size: 1.15rem; }
+    .score-card .val { font-weight: bold; color: var(--accent-color); font-size: 1.2rem; }
     .score-details {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      font-size: 0.78rem;
-      color: #aaa;
-      border-top: 1px dashed rgba(255,255,255,0.1);
-      padding-top: 6px;
+      display: flex; gap: 16px; font-size: 0.78rem; color: #aaa;
+      border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;
     }
     .score-details span { color: #e0e0e0; font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 메인 메뉴 화면 -->
+  <!-- 메인 메뉴 -->
   <div id="menu-view" class="view active">
-    <h1>AP MULTI-BENCHMARK SUITE</h1>
-    <div class="subtitle">모바일 & TV AP 주요 하드웨어 구성 요소별 종합 성능 평가</div>
+    <h1>AP PRECISION BENCHMARK v2.1</h1>
+    <div class="subtitle">고정 워크로드(Fixed Workload) 기반 고신뢰도 AP 정밀 측정 툴</div>
     
     <div class="menu-grid">
       <button class="menu-btn" data-mode="cpu">
-        <span class="btn-title">💻 CPU 테스트</span>
-        <span class="btn-desc">멀티코어 병렬 연산 성능을 측정을 위해 코어별 연산 부하를 실시간 시각화합니다.</span>
+        <span class="btn-title">💻 CPU 고정 부하 테스트</span>
+        <span class="btn-desc">1,500만 회 연산 처리 소요 시간(ms)을 측정합니다.</span>
       </button>
       <button class="menu-btn" data-mode="gpu2d">
-        <span class="btn-title">🎨 GPU 2D 테스트</span>
-        <span class="btn-desc">100단위 조절 파티클 물리학 및 Canvas 렌더링 프레임, 지연시간(Latency)을 정밀 측정합니다.</span>
+        <span class="btn-title">🎨 GPU 2D 물리 테스트</span>
+        <span class="btn-desc">20,000개 파티클의 300 프레임 연산 속도를 검증합니다.</span>
       </button>
       <button class="menu-btn" data-mode="gpu3d">
-        <span class="btn-title">🧊 GPU 3D 테스트</span>
-        <span class="btn-desc">3D 큐브 공간 렌더링 부하 시 발생하는 순간적인 프레임 드랍(Drop) 현상을 추적합니다.</span>
+        <span class="btn-title">🧊 GPU 3D 공간 렌더링</span>
+        <span class="btn-desc">1,000개 큐브 오브젝트의 250 프레임 투영 처리 시간을 정밀 산출합니다.</span>
       </button>
       <button class="menu-btn" data-mode="npu">
-        <span class="btn-title">🧠 NPU 테스트</span>
-        <span class="btn-desc">인공지능 심층 신경망(Neural Network) 추론 처리 능력 및 Latency(ms)를 시뮬레이션합니다.</span>
+        <span class="btn-title">🧠 NPU 신경망 추론</span>
+        <span class="btn-desc">400만 회 딥러닝 활성화 연산 처리 시간을 계산합니다.</span>
       </button>
       <button class="menu-btn" style="grid-column: span 2; background: #254e58;" data-mode="full">
-        <span class="btn-title" style="text-align: center;">⚡ 종합 (Full Suite) 자동 실행 (각 10초)</span>
-        <span class="btn-desc" style="text-align: center;">모든 벤치마크 항목을 연속으로 자동 실행하여 항목별 세부 점수 및 종합 점수를 산출합니다.</span>
+        <span class="btn-title" style="text-align: center;">⚡ 정밀 종합 테스트 (Full Suite)</span>
+        <span class="btn-desc" style="text-align: center;">모든 고정 부하 세트를 순차 실행하여 항목별 정밀 스코어를 도출합니다.</span>
       </button>
     </div>
   </div>
 
-  <!-- 2. 테스트 캔버스 화면 -->
+  <!-- 테스트 진행 화면 -->
   <div id="test-view" class="view">
     <div class="hud">
       <h3>
-        <span id="test-title">TEST</span>
-        <span id="auto-badge" style="font-size:0.7rem; background:var(--highlight); color:#000; padding:2px 6px; border-radius:4px; display:none;">AUTO</span>
+        <span id="test-title">PRECISION TEST</span>
+        <span id="status-badge" style="font-size:0.7rem; background:var(--highlight); color:#000; padding:2px 6px; border-radius:4px;">RUNNING</span>
       </h3>
-      <div class="hud-info" id="test-desc">안내 설명이 표시됩니다.</div>
+      <div class="hud-info" id="test-desc">테스트 진척도를 실시간 측정 중입니다...</div>
       
-      <div class="timer-container" id="timer-box" style="display:none;">
-        <div class="hud-row"><span>남은 테스트 시간:</span> <span id="val-timer" class="hud-val">10.0s</span></div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill" id="timer-bar"></div></div>
+      <div class="timer-container">
+        <div class="hud-row"><span>진행률:</span> <span id="val-progress" class="hud-val">0%</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
       </div>
 
-      <div class="hud-row"><span>실시간 FPS:</span> <span id="val-fps" class="hud-val">--</span></div>
-      <div class="hud-row"><span>프레임 지연 (Latency):</span> <span id="val-latency" class="hud-val">-- ms</span></div>
-      <div class="hud-row" id="row-minmax" style="display:none;"><span>최저 / 최고 FPS:</span> <span id="val-minmax" class="hud-val">-- / --</span></div>
-      <div class="hud-row"><span>부하량 / 처리 속도:</span> <span id="val-metric" class="hud-val">--</span></div>
-      <div class="hud-row"><span>실시간 스코어:</span> <span id="val-score" class="hud-val">0</span></div>
-
-      <div class="ctrl-group" id="controls"></div>
-      <button class="btn-back" id="btn-exit">메인 메뉴로 복귀</button>
+      <div class="hud-row"><span>소요 시간:</span> <span id="val-time" class="hud-val">0 ms</span></div>
+      <div class="hud-row"><span>처리 연산 속도:</span> <span id="val-speed" class="hud-val">--</span></div>
+      <button class="btn-back" id="btn-exit">테스트 중단 및 메뉴로</button>
     </div>
 
     <div class="test-area">
@@ -198,9 +168,9 @@
     </div>
   </div>
 
-  <!-- 3. 세부 스코어 포함 결과 모달 -->
+  <!-- 결과 모달 -->
   <div id="summary-modal">
-    <h2 style="color:var(--accent-color); text-align:center; margin-bottom:16px;">종합 AP 정밀 평가 결과</h2>
+    <h2 style="color:var(--accent-color); text-align:center; margin-bottom:16px;">종합 AP 정밀 평가 결과 (v2.1)</h2>
     <div id="summary-content"></div>
     <div style="font-size:1.4rem; color:var(--accent-color); text-align:center; margin-top:14px; padding-top:10px; border-top:2px dashed var(--highlight); font-weight:bold;" id="total-score-val">
       TOTAL SCORE: 0 점
@@ -209,25 +179,18 @@
   </div>
 
   <script>
-    const TEST_DURATION = 10;
-    let currentMode = null, animId = null, isFullTest = false, fullTestIndex = 0;
-    let testStartTime = 0, autoTimerId = null;
+    let currentMode = null, isFullTest = false, fullTestIndex = 0;
     const fullSequence = ['cpu', 'gpu2d', 'gpu3d', 'npu'];
 
-    // 세부 데이터 저장을 위한 객체 구조 확장
-    const benchmarkData = {
-      cpu: { score: 0, ops: 0, threads: 0 },
-      gpu2d: { score: 0, fps: 0, latency: 0, particles: 0 },
-      gpu3d: { score: 0, fps: 0, minFps: 0, maxFps: 0, cubes: 0 },
-      npu: { score: 0, inferences: 0, batchSize: 0 }
+    const resultScores = {
+      cpu: { score: 0, timeMs: 0, opsSec: 0 },
+      gpu2d: { score: 0, timeMs: 0, fps: 0 },
+      gpu3d: { score: 0, timeMs: 0, fps: 0 },
+      npu: { score: 0, timeMs: 0, infSec: 0 }
     };
 
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-
-    let lastTime = performance.now(), frameCount = 0, currentFps = 0, frameLatency = 0;
-    let minFps = 999, maxFps = 0;
-    let fpsSamples = [];
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -235,16 +198,20 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // 메뉴 버튼 이벤트 바인딩
     document.querySelectorAll('.menu-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const mode = btn.getAttribute('data-mode');
-        startTest(mode);
-      });
+      btn.addEventListener('click', () => startTest(btn.getAttribute('data-mode')));
     });
 
     document.getElementById('btn-exit').addEventListener('click', exitTest);
     document.getElementById('btn-close-summary').addEventListener('click', closeSummary);
+
+    function nextFrame() {
+      return new Promise(resolve => requestAnimationFrame(resolve));
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     function startTest(mode) {
       currentMode = mode;
@@ -254,337 +221,260 @@
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('test-view').classList.add('active');
       resizeCanvas();
-      initCurrentTest();
+      
+      runBenchmarkStep();
     }
 
     function exitTest() {
-      if (animId) cancelAnimationFrame(animId);
-      if (autoTimerId) clearTimeout(autoTimerId);
       currentMode = null; isFullTest = false;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('menu-view').classList.add('active');
     }
 
-    function setupControls() {
-      const ctrl = document.getElementById('controls');
-      const desc = document.getElementById('test-desc');
-      const rowMinMax = document.getElementById('row-minmax');
-      rowMinMax.style.display = 'none';
+    async function runBenchmarkStep() {
+      document.getElementById('test-title').textContent = currentMode.toUpperCase() + " PRECISION TEST";
+      document.getElementById('progress-bar').style.width = '0%';
+      document.getElementById('val-progress').textContent = '0%';
 
-      if (currentMode === 'cpu') {
-        desc.textContent = 'CPU 소수/행렬 연산을 다중 코어로 병렬 처리합니다. 코어별 연산 속도를 정밀 측정합니다.';
-        ctrl.innerHTML = '<label style="font-size:0.82rem;">동작 스레드 코어 수: <span id="val-threads">' + (navigator.hardwareConcurrency || 4) + '</span></label>' +
-          '<input type="range" id="param-threads" min="1" max="' + (navigator.hardwareConcurrency || 16) + '" value="' + (navigator.hardwareConcurrency || 4) + '">';
-        document.getElementById('param-threads').oninput = function(e) {
-          document.getElementById('val-threads').textContent = e.target.value;
-        };
+      // 각 테스트 전 안정화
+      await delay(200);
 
-      } else if (currentMode === 'gpu2d') {
-        desc.textContent = '2D 물리 파티클 연산 테스트입니다. 프레임 하락 및 Latency(지연시간) 변화를 추적합니다.';
-        ctrl.innerHTML = '<label style="font-size:0.82rem;">파티클 개수: <span id="val-pcount">5,000</span>개</label>' +
-          '<input type="range" id="param-particles" min="100" max="100000" step="100" value="5000">' +
-          '<div class="quick-btns">' +
-            '<button class="q-btn" onclick="addP(100)">+100</button>' +
-            '<button class="q-btn" onclick="addP(1000)">+1,000</button>' +
-            '<button class="q-btn" onclick="addP(10000)">+10,000</button>' +
-            '<button class="q-btn" onclick="setP(50000)">5만</button>' +
-            '<button class="q-btn" onclick="setP(100000)">10만</button>' +
-          '</div>';
-        document.getElementById('param-particles').oninput = function(e) {
-          document.getElementById('val-pcount').textContent = parseInt(e.target.value).toLocaleString();
-          init2DParticles(parseInt(e.target.value));
-        };
+      if (currentMode === 'cpu') await runCPUBenchmark();
+      else if (currentMode === 'gpu2d') await runGPU2DBenchmark();
+      else if (currentMode === 'gpu3d') await runGPU3DBenchmark();
+      else if (currentMode === 'npu') await runNPUBenchmark();
 
-      } else if (currentMode === 'gpu3d') {
-        rowMinMax.style.display = 'flex';
-        desc.textContent = '3D 큐브 공간 투영 부하 테스트입니다. 순간 발생하는 프레임 드랍(스파이크)을 감지합니다.';
-        ctrl.innerHTML = '<label style="font-size:0.82rem;">3D 큐브 수량: <span id="val-3dcount">1,000</span>개</label>' +
-          '<input type="range" id="param-3dcount" min="100" max="5000" step="100" value="1000">';
-        document.getElementById('param-3dcount').oninput = function(e) {
-          document.getElementById('val-3dcount').textContent = parseInt(e.target.value).toLocaleString();
-          init3DCubes(parseInt(e.target.value));
-        };
-
-      } else if (currentMode === 'npu') {
-        desc.textContent = '인공지능 신경망(Neural Network) 심층 레이어 추론 속도 및 초당 처리 능력을 측정합니다.';
-        ctrl.innerHTML = '<label style="font-size:0.82rem;">배치 크기 (Batch Size): <span id="val-batch">128</span></label>' +
-          '<input type="range" id="param-batch" min="16" max="512" step="16" value="128">';
-        document.getElementById('param-batch').oninput = function(e) {
-          document.getElementById('val-batch').textContent = e.target.value;
-        };
-      }
-    }
-
-    function addP(val) {
-      const el = document.getElementById('param-particles');
-      if (el) { el.value = Math.min(100000, parseInt(el.value) + val); el.oninput({ target: el }); }
-    }
-    function setP(val) {
-      const el = document.getElementById('param-particles');
-      if (el) { el.value = val; el.oninput({ target: el }); }
-    }
-
-    function initCurrentTest() {
-      document.getElementById('test-title').textContent = currentMode.toUpperCase() + " BENCHMARK";
-      document.getElementById('auto-badge').style.display = isFullTest ? 'inline-block' : 'none';
-      document.getElementById('timer-box').style.display = isFullTest ? 'block' : 'none';
-
-      setupControls();
-      minFps = 999; maxFps = 0; cpuOps = 0; npuInf = 0; fpsSamples = [];
-
-      if (currentMode === 'gpu2d') init2DParticles(5000);
-      else if (currentMode === 'gpu3d') init3DCubes(1000);
-
-      testStartTime = performance.now();
-      
-      if (isFullTest) {
-        if (autoTimerId) clearTimeout(autoTimerId);
-        autoTimerId = setTimeout(autoNextFullTest, TEST_DURATION * 1000);
-      }
-
-      lastTime = performance.now(); frameCount = 0;
-      loop();
-    }
-
-    // --- 1. CPU TEST ---
-    let cpuOps = 0;
-    function renderCPU() {
-      const threads = document.getElementById('param-threads') ? parseInt(document.getElementById('param-threads').value) : 4;
-      ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      let cols = Math.ceil(Math.sqrt(threads));
-      let boxSize = 75;
-      let startX = (canvas.width - (cols * 95)) / 2;
-      let startY = (canvas.height - (cols * 95)) / 2;
-
-      for (let i = 0; i < threads; i++) {
-        let r = Math.floor(i / cols), c = i % cols;
-        let x = startX + c * 95, y = startY + r * 95;
-        
-        for(let k=0; k<6000; k++) { Math.sqrt(Math.random()*1000); cpuOps++; }
-        
-        ctx.fillStyle = 'hsl(' + ((Date.now()/4 + i*40)%360) + ', 80%, 50%)';
-        ctx.fillRect(x, y, boxSize, boxSize);
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('Core ' + (i+1), x + 18, y + 42);
-      }
-    }
-
-    // --- 2. GPU 2D TEST ---
-    let pCount = 0, pX, pY, pVX, pVY;
-    function init2DParticles(count) {
-      pCount = count;
-      pX = new Float32Array(count); pY = new Float32Array(count);
-      pVX = new Float32Array(count); pVY = new Float32Array(count);
-      for (let i = 0; i < count; i++) {
-        pX[i] = Math.random() * canvas.width; pY[i] = Math.random() * canvas.height;
-        pVX[i] = (Math.random() - 0.5) * 5; pVY[i] = (Math.random() - 0.5) * 5;
-      }
-    }
-    function render2D() {
-      ctx.fillStyle = 'rgba(5, 5, 5, 0.25)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#66fcf1';
-      for (let i = 0; i < pCount; i++) {
-        pX[i] += pVX[i]; pY[i] += pVY[i];
-        if (pX[i] < 0 || pX[i] > canvas.width) pVX[i] *= -1;
-        if (pY[i] < 0 || pY[i] > canvas.height) pVY[i] *= -1;
-        ctx.fillRect(pX[i], pY[i], 2, 2);
-      }
-    }
-
-    // --- 3. GPU 3D TEST ---
-    let cubes = [];
-    function init3DCubes(count) {
-      cubes = [];
-      for (let i = 0; i < count; i++) {
-        cubes.push({
-          x: (Math.random() - 0.5) * 800,
-          y: (Math.random() - 0.5) * 800,
-          z: Math.random() * 800 + 100,
-          rx: Math.random() * Math.PI,
-          ry: Math.random() * Math.PI
-        });
-      }
-    }
-    function render3D() {
-      ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      let cx = canvas.width / 2, cy = canvas.height / 2;
-      let fov = 400;
-
-      ctx.strokeStyle = '#66fcf1'; ctx.lineWidth = 1;
-      let nodes = [[-15,-15,-15], [15,-15,-15], [15,15,-15], [-15,15,-15], [-15,-15,15], [15,-15,15], [15,15,15], [-15,15,15]];
-      let edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
-
-      for (let i = 0; i < cubes.length; i++) {
-        let c = cubes[i];
-        c.rx += 0.015; c.ry += 0.01;
-        
-        let projected = [];
-        for (let j = 0; j < 8; j++) {
-          let nx = nodes[j][0], ny = nodes[j][1], nz = nodes[j][2];
-          let y1 = ny * Math.cos(c.rx) - nz * Math.sin(c.rx);
-          let z1 = ny * Math.sin(c.rx) + nz * Math.cos(c.rx);
-          let x2 = nx * Math.cos(c.ry) + z1 * Math.sin(c.ry);
-          let z2 = -nx * Math.sin(c.ry) + z1 * Math.cos(c.ry);
-
-          let px = (x2 + c.x) * (fov / (z2 + c.z)) + cx;
-          let py = (y1 + c.y) * (fov / (z2 + c.z)) + cy;
-          projected.push([px, py]);
-        }
-
-        ctx.beginPath();
-        for (let e = 0; e < edges.length; e++) {
-          let p1 = projected[edges[e][0]], p2 = projected[edges[e][1]];
-          ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
-        }
-        ctx.stroke();
-      }
-    }
-
-    // --- 4. NPU TEST ---
-    let npuInf = 0;
-    function renderNPU() {
-      const batch = document.getElementById('param-batch') ? parseInt(document.getElementById('param-batch').value) : 128;
-      ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      let layers = [4, 8, 12, 8, 4];
-      let layerGap = canvas.width / 6;
-      
-      for(let b=0; b<batch; b++) { Math.tanh(Math.random()); npuInf++; }
-
-      ctx.lineWidth = 1;
-      for (let l = 0; l < layers.length - 1; l++) {
-        let x1 = layerGap * (l + 1), x2 = layerGap * (l + 2);
-        for (let i = 0; i < layers[l]; i++) {
-          let y1 = (canvas.height / (layers[l] + 1)) * (i + 1);
-          for (let j = 0; j < layers[l+1]; j++) {
-            let y2 = (canvas.height / (layers[l+1] + 1)) * (j + 1);
-            ctx.strokeStyle = Math.random() > 0.65 ? '#66fcf1' : '#1f2833';
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-          }
-        }
-      }
-    }
-
-    // --- 메인 애니메이션 루프 ---
-    function loop() {
-      let now = performance.now();
-      let delta = now - lastTime;
-      frameCount++;
+      await delay(300);
 
       if (isFullTest) {
-        let elapsed = (now - testStartTime) / 1000;
-        let remaining = Math.max(0, TEST_DURATION - elapsed);
-        document.getElementById('val-timer').textContent = remaining.toFixed(1) + 's';
-        document.getElementById('timer-bar').style.width = ((remaining / TEST_DURATION) * 100) + '%';
-      }
-
-      if (delta >= 500) {
-        currentFps = Math.round((frameCount * 1000) / delta);
-        frameLatency = parseFloat((delta / frameCount).toFixed(1));
-        
-        if (currentFps > 0) fpsSamples.push(currentFps);
-        if (currentFps < minFps && currentFps > 0) minFps = currentFps;
-        if (currentFps > maxFps) maxFps = currentFps;
-
-        document.getElementById('val-fps').textContent = currentFps;
-        document.getElementById('val-latency').textContent = frameLatency + ' ms';
-        
-        let minMaxEl = document.getElementById('val-minmax');
-        minMaxEl.textContent = minFps + ' / ' + maxFps;
-        if (maxFps - currentFps > 12) minMaxEl.classList.add('drop-alert');
-        else minMaxEl.classList.remove('drop-alert');
-
-        frameCount = 0; lastTime = now;
-      }
-
-      // 실시간 데이터 기록
-      if (currentMode === 'cpu') {
-        renderCPU();
-        let threads = document.getElementById('param-threads') ? parseInt(document.getElementById('param-threads').value) : 4;
-        let score = Math.round(cpuOps / 450);
-        benchmarkData.cpu = { score: score, ops: cpuOps, threads: threads };
-        document.getElementById('val-metric').textContent = (cpuOps/1000).toFixed(0) + 'k Operations';
-        document.getElementById('val-score').textContent = score.toLocaleString();
-
-      } else if (currentMode === 'gpu2d') {
-        render2D();
-        let score = Math.round(currentFps * (pCount / 100));
-        let avgFps = fpsSamples.length ? Math.round(fpsSamples.reduce((a,b)=>a+b,0)/fpsSamples.length) : currentFps;
-        benchmarkData.gpu2d = { score: score, fps: avgFps, latency: frameLatency, particles: pCount };
-        document.getElementById('val-metric').textContent = pCount.toLocaleString() + ' Particles';
-        document.getElementById('val-score').textContent = score.toLocaleString();
-
-      } else if (currentMode === 'gpu3d') {
-        render3D();
-        let score = Math.round(currentFps * (cubes.length * 1.5));
-        let avgFps = fpsSamples.length ? Math.round(fpsSamples.reduce((a,b)=>a+b,0)/fpsSamples.length) : currentFps;
-        benchmarkData.gpu3d = { score: score, fps: avgFps, minFps: minFps===999?0:minFps, maxFps: maxFps, cubes: cubes.length };
-        document.getElementById('val-metric').textContent = cubes.length + ' Cubes';
-        document.getElementById('val-score').textContent = score.toLocaleString();
-
-      } else if (currentMode === 'npu') {
-        renderNPU();
-        let batch = document.getElementById('param-batch') ? parseInt(document.getElementById('param-batch').value) : 128;
-        let score = Math.round(npuInf * 2);
-        benchmarkData.npu = { score: score, inferences: npuInf, batchSize: batch };
-        document.getElementById('val-metric').textContent = npuInf.toLocaleString() + ' Infers/sec';
-        document.getElementById('val-score').textContent = score.toLocaleString();
-      }
-
-      animId = requestAnimationFrame(loop);
-    }
-
-    function autoNextFullTest() {
-      fullTestIndex++;
-      if (fullTestIndex < fullSequence.length) {
-        currentMode = fullSequence[fullTestIndex];
-        initCurrentTest();
+        fullTestIndex++;
+        if (fullTestIndex < fullSequence.length) {
+          currentMode = fullSequence[fullTestIndex];
+          runBenchmarkStep();
+        } else {
+          exitTest();
+          showSummary();
+        }
       } else {
         exitTest();
         showSummary();
       }
     }
 
-    // 정밀 세부 데이터가 포함된 모달 출력
+    function updateProgress(percent, timeMs, speedText) {
+      document.getElementById('progress-bar').style.width = Math.min(100, percent) + '%';
+      document.getElementById('val-progress').textContent = Math.round(Math.min(100, percent)) + '%';
+      document.getElementById('val-time').textContent = Math.round(timeMs) + ' ms';
+      document.getElementById('val-speed').textContent = speedText;
+    }
+
+    // --- 1. CPU 고정 워크로드 테스트 ---
+    async function runCPUBenchmark() {
+      const TOTAL_OPS = 15000000;
+      const CHUNK_SIZE = 250000;
+      let completedOps = 0;
+
+      const startTime = performance.now();
+
+      while (completedOps < TOTAL_OPS) {
+        for (let i = 0; i < CHUNK_SIZE; i++) {
+          Math.sqrt(i) * Math.atan(i);
+        }
+        completedOps += CHUNK_SIZE;
+        let elapsed = performance.now() - startTime;
+        let opsSec = (completedOps / elapsed) * 1000;
+        
+        ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#66fcf1'; ctx.font = '22px sans-serif';
+        ctx.fillText(`💻 CPU Multi-Math Test: ${(completedOps/1000000).toFixed(1)}M / 15M Ops`, 50, 100);
+
+        updateProgress((completedOps / TOTAL_OPS) * 100, elapsed, (opsSec/1000000).toFixed(2) + ' M-Ops/s');
+        await nextFrame();
+      }
+
+      const totalTime = performance.now() - startTime;
+      const score = Math.round((15000000 / totalTime) * 15);
+      resultScores.cpu = {
+        score: score,
+        timeMs: Math.round(totalTime),
+        opsSec: Math.round((TOTAL_OPS / totalTime) * 1000)
+      };
+    }
+
+    // --- 2. GPU 2D 고정 워크로드 테스트 ---
+    async function runGPU2DBenchmark() {
+      const PARTICLE_COUNT = 20000;
+      const TOTAL_FRAMES = 300;
+      
+      let pX = new Float32Array(PARTICLE_COUNT), pY = new Float32Array(PARTICLE_COUNT);
+      let pVX = new Float32Array(PARTICLE_COUNT), pVY = new Float32Array(PARTICLE_COUNT);
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        pX[i] = Math.random() * canvas.width; pY[i] = Math.random() * canvas.height;
+        pVX[i] = (Math.random() - 0.5) * 6; pVY[i] = (Math.random() - 0.5) * 6;
+      }
+
+      const startTime = performance.now();
+
+      for (let f = 0; f < TOTAL_FRAMES; f++) {
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#66fcf1';
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          pX[i] += pVX[i]; pY[i] += pVY[i];
+          if (pX[i] < 0 || pX[i] > canvas.width) pVX[i] *= -1;
+          if (pY[i] < 0 || pY[i] > canvas.height) pVY[i] *= -1;
+          ctx.fillRect(pX[i], pY[i], 1.5, 1.5);
+        }
+
+        let elapsed = performance.now() - startTime;
+        let avgFps = (f + 1) / (elapsed / 1000);
+        updateProgress(((f + 1) / TOTAL_FRAMES) * 100, elapsed, avgFps.toFixed(1) + ' FPS');
+
+        await nextFrame();
+      }
+
+      const totalTime = performance.now() - startTime;
+      const avgFps = Math.round((TOTAL_FRAMES / totalTime) * 1000);
+      const score = Math.round((TOTAL_FRAMES * PARTICLE_COUNT) / totalTime * 10);
+
+      resultScores.gpu2d = { score: score, timeMs: Math.round(totalTime), fps: avgFps };
+    }
+
+    // --- 3. GPU 3D 고정 워크로드 테스트 ---
+    async function runGPU3DBenchmark() {
+      const CUBE_COUNT = 1000;
+      const TOTAL_FRAMES = 250;
+      let cubes = [];
+
+      for (let i = 0; i < CUBE_COUNT; i++) {
+        cubes.push({
+          x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 800, z: Math.random() * 800 + 100,
+          rx: Math.random() * Math.PI, ry: Math.random() * Math.PI
+        });
+      }
+
+      const nodes = [[-10,-10,-10],[10,-10,-10],[10,10,-10],[-10,10,-10],[-10,-10,10],[10,-10,10],[10,10,10],[-10,10,10]];
+      const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+
+      const startTime = performance.now();
+
+      for (let f = 0; f < TOTAL_FRAMES; f++) {
+        ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#66fcf1'; ctx.lineWidth = 1;
+        let cx = canvas.width / 2, cy = canvas.height / 2;
+
+        for (let i = 0; i < CUBE_COUNT; i++) {
+          let c = cubes[i];
+          c.rx += 0.02; c.ry += 0.015;
+          let projected = [];
+
+          for (let j = 0; j < 8; j++) {
+            let nx = nodes[j][0], ny = nodes[j][1], nz = nodes[j][2];
+            let y1 = ny * Math.cos(c.rx) - nz * Math.sin(c.rx);
+            let z1 = ny * Math.sin(c.rx) + nz * Math.cos(c.rx);
+            let x2 = nx * Math.cos(c.ry) + z1 * Math.sin(c.ry);
+            let z2 = -nx * Math.sin(c.ry) + z1 * Math.cos(c.ry);
+
+            let px = (x2 + c.x) * (400 / (z2 + c.z)) + cx;
+            let py = (y1 + c.y) * (400 / (z2 + c.z)) + cy;
+            projected.push([px, py]);
+          }
+
+          ctx.beginPath();
+          for (let e = 0; e < edges.length; e++) {
+            let p1 = projected[edges[e][0]], p2 = projected[edges[e][1]];
+            ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
+          }
+          ctx.stroke();
+        }
+
+        let elapsed = performance.now() - startTime;
+        let avgFps = (f + 1) / (elapsed / 1000);
+        updateProgress(((f + 1) / TOTAL_FRAMES) * 100, elapsed, avgFps.toFixed(1) + ' FPS');
+
+        await nextFrame();
+      }
+
+      const totalTime = performance.now() - startTime;
+      const avgFps = Math.round((TOTAL_FRAMES / totalTime) * 1000);
+      const score = Math.round((TOTAL_FRAMES * CUBE_COUNT) / totalTime * 20);
+
+      resultScores.gpu3d = { score: score, timeMs: Math.round(totalTime), fps: avgFps };
+    }
+
+    // --- 4. NPU 고정 워크로드 테스트 ---
+    async function runNPUBenchmark() {
+      const TOTAL_INFERS = 4000000;
+      const CHUNK = 200000;
+      let completed = 0;
+
+      const startTime = performance.now();
+
+      while (completed < TOTAL_INFERS) {
+        for (let i = 0; i < CHUNK; i++) {
+          Math.tanh(Math.sin(i));
+        }
+        completed += CHUNK;
+        let elapsed = performance.now() - startTime;
+        let infSec = (completed / elapsed) * 1000;
+
+        ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#66fcf1'; ctx.font = '22px sans-serif';
+        ctx.fillText(`🧠 NPU Neural Activation Test: ${(completed/1000000).toFixed(2)}M / 4M Infers`, 50, 100);
+
+        updateProgress((completed / TOTAL_INFERS) * 100, elapsed, (infSec/1000000).toFixed(2) + ' M-Inf/s');
+        await nextFrame();
+      }
+
+      const totalTime = performance.now() - startTime;
+      const score = Math.round((TOTAL_INFERS / totalTime) * 15);
+
+      resultScores.npu = {
+        score: score,
+        timeMs: Math.round(totalTime),
+        infSec: Math.round((TOTAL_INFERS / totalTime) * 1000)
+      };
+    }
+
+    // 결과 출력
     function showSummary() {
       const modal = document.getElementById('summary-modal');
       const content = document.getElementById('summary-content');
-      const d = benchmarkData;
+      const d = resultScores;
       let total = d.cpu.score + d.gpu2d.score + d.gpu3d.score + d.npu.score;
 
       content.innerHTML = 
         '<div class="score-card">' +
-          '<div class="score-card-header"><span class="title">💻 CPU (멀티코어 연산)</span><span class="val">' + d.cpu.score.toLocaleString() + ' 점</span></div>' +
+          '<div class="score-card-header"><span class="title">💻 CPU (다중 정밀 연산)</span><span class="val">' + d.cpu.score.toLocaleString() + ' 점</span></div>' +
           '<div class="score-details">' +
-            '<div>초당 연산: <span>' + d.cpu.ops.toLocaleString() + ' ops</span></div>' +
-            '<div>가동 코어: <span>' + d.cpu.threads + ' Core</span></div>' +
+            '<div>소요시간: <span>' + d.cpu.timeMs.toLocaleString() + ' ms</span></div>' +
+            '<div>처리 속도: <span>' + (d.cpu.opsSec / 1000000).toFixed(2) + ' M-Ops/s</span></div>' +
           '</div>' +
         '</div>' +
 
         '<div class="score-card">' +
-          '<div class="score-card-header"><span class="title">🎨 GPU 2D (물리/파티클)</span><span class="val">' + d.gpu2d.score.toLocaleString() + ' 점</span></div>' +
+          '<div class="score-card-header"><span class="title">🎨 GPU 2D (물리 파티클)</span><span class="val">' + d.gpu2d.score.toLocaleString() + ' 점</span></div>' +
           '<div class="score-details">' +
-            '<div>평균 FPS: <span>' + d.gpu2d.fps + ' FPS</span></div>' +
-            '<div>지연시간: <span>' + d.gpu2d.latency + ' ms</span></div>' +
-            '<div>부하 파티클: <span>' + d.gpu2d.particles.toLocaleString() + '개</span></div>' +
+            '<div>소요시간: <span>' + d.gpu2d.timeMs.toLocaleString() + ' ms</span></div>' +
+            '<div>평균 처리: <span>' + d.gpu2d.fps + ' FPS</span></div>' +
           '</div>' +
         '</div>' +
 
         '<div class="score-card">' +
-          '<div class="score-card-header"><span class="title">🧊 GPU 3D (공간 렌더링)</span><span class="val">' + d.gpu3d.score.toLocaleString() + ' 점</span></div>' +
+          '<div class="score-card-header"><span class="title">🧊 GPU 3D (공간 투영)</span><span class="val">' + d.gpu3d.score.toLocaleString() + ' 점</span></div>' +
           '<div class="score-details">' +
-            '<div>평균 FPS: <span>' + d.gpu3d.fps + ' FPS</span></div>' +
-            '<div>최저/최고 FPS: <span>' + d.gpu3d.minFps + ' / ' + d.gpu3d.maxFps + '</span></div>' +
-            '<div>3D 큐브 수: <span>' + d.gpu3d.cubes.toLocaleString() + '개</span></div>' +
+            '<div>소요시간: <span>' + d.gpu3d.timeMs.toLocaleString() + ' ms</span></div>' +
+            '<div>평균 처리: <span>' + d.gpu3d.fps + ' FPS</span></div>' +
           '</div>' +
         '</div>' +
 
         '<div class="score-card">' +
-          '<div class="score-card-header"><span class="title">🧠 NPU (AI 신경망 추론)</span><span class="val">' + d.npu.score.toLocaleString() + ' 점</span></div>' +
+          '<div class="score-card-header"><span class="title">🧠 NPU (신경망 추론)</span><span class="val">' + d.npu.score.toLocaleString() + ' 점</span></div>' +
           '<div class="score-details">' +
-            '<div>초당 AI 추론: <span>' + d.npu.inferences.toLocaleString() + ' inf/s</span></div>' +
-            '<div>배치 크기: <span>' + d.npu.batchSize + '</span></div>' +
+            '<div>소요시간: <span>' + d.npu.timeMs.toLocaleString() + ' ms</span></div>' +
+            '<div>추론 속도: <span>' + (d.npu.infSec / 1000000).toFixed(2) + ' M-Inf/s</span></div>' +
           '</div>' +
         '</div>';
       
