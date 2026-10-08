@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Snapdragon Particle Demo</title>
+    <style>
+        body { background: #0b0f19; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
+        h1 { color: #32e0c4; margin: 10px 0; }
+        
+        .box { background: #161f33; max-width: 800px; margin: 0 auto 15px; padding: 15px; border-radius: 10px; }
+        .row { margin: 8px 0; }
+        
+        input[type="number"] { width: 120px; padding: 6px; font-size: 1rem; font-weight: bold; background: #0b0f19; color: #32e0c4; border: 1px solid #32e0c4; border-radius: 4px; text-align: right; }
+        
+        button { background: #0052d4; color: #fff; border: none; padding: 7px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; margin: 2px; }
+        button:hover { background: #0072ff; }
+        
+        .b-sub { background: #2b3a55; }
+        .b-add { background: #1b5e20; }
+        .b-min { background: #b71c1c; }
+
+        .info { background: #0e1726; padding: 10px; border-radius: 6px; font-size: 1.2rem; font-weight: bold; color: #32e0c4; margin-top: 10px; }
+        
+        #c { background: #000; border-radius: 8px; display: block; margin: 0 auto; border: 1px solid #32e0c4; }
+    </style>
+</head>
+<body>
+
+    <h1>Snapdragon GPU Particle Rendering Demo</h1>
+
+    <div class="box">
+        <!-- 1행: 입력 및 배수 -->
+        <div class="row">
+            <b>파티클 개수: </b>
+            <input type="number" id="pInput" value="5000">
+            <button class="b-sub" onclick="runInput()">적용</button>
+            <button class="b-sub" onclick="runMult(2)">2배 (x2)</button>
+            <button class="b-sub" onclick="runMult(0.5)">절반 (÷2)</button>
+        </div>
+
+        <!-- 2행: 더하기 / 빼기 -->
+        <div class="row">
+            <button class="b-add" onclick="runAdd(100)">+100</button>
+            <button class="b-min" onclick="runAdd(-100)">-100</button>
+            <button class="b-add" onclick="runAdd(1000)">+1,000</button>
+            <button class="b-min" onclick="runAdd(-1000)">-1,000</button>
+            <button class="b-add" onclick="runAdd(10000)">+10,000</button>
+            <button class="b-min" onclick="runAdd(-10000)">-10,000</button>
+        </div>
+
+        <!-- 3행: 프리셋 -->
+        <div class="row">
+            <button onclick="runSet(1000)">1,000개</button>
+            <button onclick="runSet(10000)">10,000개</button>
+            <button onclick="runSet(50000)">50,000개</button>
+            <button onclick="runSet(100000)">100,000개</button>
+            <button onclick="runSet(500000)">500,000개</button>
+        </div>
+
+        <!-- 대시보드 -->
+        <div class="info">
+            실시간 프레임: <span id="fps">0 FPS</span> &nbsp;|&nbsp; 프레임 지연: <span id="ms">0.0 ms</span>
+        </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <canvas id="c" width="800" height="420"></canvas>
+
+    <script>
+        // 요소 가져오기
+        var canvas = document.getElementById('c');
+        var ctx = canvas.getContext('2d');
+        var inputEl = document.getElementById('pInput');
+        var fpsEl = document.getElementById('fps');
+        var msEl = document.getElementById('ms');
+
+        var list = [];
+        var target = 5000;
+        var fCount = 0;
+        var lastT = Date.now();
+        var palette = ['#32e0c4', '#0052d4', '#7928ca', '#00ff88', '#ff007f', '#ffb703'];
+
+        // 파티클 생성
+        function gen() {
+            return {
+                x: Math.random() * 800,
+                y: Math.random() * 420,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                sz: Math.random() * 2.5 + 1,
+                col: palette[Math.floor(Math.random() * palette.length)]
+            };
+        }
+
+        // 수량 맞춤
+        function sync() {
+            if (list.length < target) {
+                var need = target - list.length;
+                for (var i = 0; i < need; i++) list.push(gen());
+            } else if (list.length > target) {
+                list.length = target;
+            }
+            inputEl.value = target;
+        }
+
+        // 제어 함수
+        function runInput() {
+            var v = parseInt(inputEl.value);
+            if (v && v > 0) { target = v; sync(); }
+        }
+        function runAdd(n) { target = Math.max(1, target + n); sync(); }
+        function runMult(f) { target = Math.max(1, Math.floor(target * f)); sync(); }
+        function runSet(n) { target = n; sync(); }
+
+        // 초기화
+        sync();
+
+        // 렌더링 메인 함수
+        function draw() {
+            // 잔상 배경
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(0, 0, 800, 420);
+
+            // 파티클 그리기
+            var len = list.length;
+            for (var i = 0; i < len; i++) {
+                var p = list[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > 800) p.vx *= -1;
+                if (p.y < 0 || p.y > 420) p.vy *= -1;
+
+                ctx.fillStyle = p.col;
+                ctx.fillRect(p.x, p.y, p.sz, p.sz);
+            }
+
+            // FPS 수치 계산
+            fCount++;
+            var now = Date.now();
+            if (now - lastT >= 500) {
+                var curFps = Math.round((fCount * 1000) / (now - lastT));
+                fpsEl.innerText = curFps + " FPS";
+                msEl.innerText = (curFps > 0 ? (1000 / curFps).toFixed(1) : "0.0") + " ms";
+                fCount = 0;
+                lastT = now;
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // 실행
+        draw();
+    </script>
+</body>
+</html>
